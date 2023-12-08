@@ -1,5 +1,18 @@
 # Deploy FastAPI on Render
 
+## References
+[FastAPI -> Learn -> Tutorial - User Guide](https://fastapi.tiangolo.com/tutorial/)
+
+
+## Create Environment
+
+**WSL**
+```
+$ conda create -n fastfly python=3.10
+$ conda activate fastfly
+$ pip install "fastapi[all]"
+```
+
 Use this repo as a template to deploy a Python [FastAPI](https://fastapi.tiangolo.com) service on Render.
 
 See https://render.com/docs/deploy-fastapi or follow the steps below:
