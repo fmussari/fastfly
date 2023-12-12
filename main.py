@@ -2,29 +2,106 @@
 # https://youtu.be/2g1ZjA6zHRo?si=AhaMkifAUbvOj5Sa
  
 from fastapi import FastAPI, status, HTTPException
-from pydantic import BaseModel
+from http import HTTPStatus
+
+#from pydantic import BaseModel
+from schemas import ItemModel, ItemCreateModel, ItemPatchModel, ItemDeleteModel
+
 from typing import Optional, List
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
 #from database import SessionLocal
-from database import Session
-import models
+#from database import Session
+from crud import CRUD
+from database import engine
 
-from dotenv import load_dotenv
+#import models
+from models import Item
 
-app = FastAPI()
+app = FastAPI(
+    title = 'Noted API',
+    description = 'Simple API'
+)
 
+""" Before async
+db = SessionLocal()
+db = Session()
 class Item(BaseModel):
     id:int
     name:str
     description:str
-    price:int
+    price:float
     on_offer:bool
+    date_created:datetime
 
     class Config:
         orm_mode = True
+"""
+session = async_sessionmaker(
+    bind=engine,
+    expire_on_commit=False
+)
+db = CRUD()
 
-#db = SessionLocal()
-db = Session()
+@app.get('/items', response_model=List[ItemModel], status_code=status.HTTP_200_OK)
+async def get_all_items():
+    items = await db.get_all(session)
+    return items
 
+@app.post('/items', response_model=ItemModel, status_code=HTTPStatus.CREATED)
+async def create_an_item(item_data:ItemCreateModel):
+    new_item = Item(
+        name=item_data.name,
+        description=item_data.description,
+        price=item_data.price,
+        on_offer=item_data.on_offer
+    )
+    item = await db.add(session, new_item)
+
+    return item
+
+@app.get('/item/{item_id}', response_model=ItemModel, status_code=HTTPStatus.OK)
+async def get_item_by_id(item_id:int):
+    """API endpoint for retrieving an item by its ID
+    """
+    item = await db.get_by_id(session, item_id)
+    if item is None:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, 
+            detail=f'Item with id={item_id} doesn\'t exist'
+        )
+
+    return item
+
+@app.patch("/item/{item_id}", response_model=ItemModel, status_code=HTTPStatus.OK)
+async def update_item(item_id:int, data:ItemPatchModel):
+    """Update item by ID
+    """
+    updated_item = await db.update(
+        session, item_id, data=data
+    )
+
+    return updated_item
+
+@app.delete('/item/{item_id}', response_model=ItemDeleteModel, status_code=HTTPStatus.OK)
+async def delete_item(item_id:int):
+    """Delete item by id
+    """
+    item_to_delete = await db.get_by_id(session, item_id)
+    if item_to_delete is None:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, 
+            detail=f'Item with id={item_id} doesn\'t exist'
+        )
+    
+    await db.delete(session, item_to_delete)
+
+    return {"detail": f"Item with id={item_id} successfully deleted"}
+    
+
+
+
+""" Before asyncio
 @app.get('/items', response_model=List[Item], status_code=200)
 def get_all_items():
     items = db.query(models.Item).all()
@@ -77,7 +154,7 @@ def delete_item(item_id:int):
     db.commit()
 
     return item_to_delete
-
+"""
 
 """
 Before connecting to the database

@@ -14,6 +14,7 @@ $ conda activate fastfly
 $ pip install "fastapi[all]"
 $ pip install SQLAlchemy
 $ pip install psycopg2-binary
+$ pip install asyncpg
 
 $ uvicorn main:app --reload
 ```
@@ -23,12 +24,18 @@ $ uvicorn main:app --reload
 $ curl -X POST localhost:8000/items \
 -H "Content-Type: application/json" \
 -d '{"id": 1, "name": "Milk", "price": 2000, "description": "Nice milk", "on_offer": true}'
+
+$ curl -X POST https://fastfly.onrender.com/items \
+-H "Content-Type: application/json" \
+-d '{"id": 1, "name": "Milk", "price": 2000, "description": "Nice milk", "on_offer": true}'
 ```
 ```
 $ curl -X POST localhost:8000/items \
 -H "Content-Type: application/json" \
 -d '{"id": 2, "name": "Coffee", "price": 5000, "description": "Nice coffee", "on_offer": false}'
 ```
+### List Items
+
 ### Update
 ```
 $ curl -X PUT localhost:8000/item/1 \
